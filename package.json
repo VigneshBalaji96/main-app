@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:watch": "npm run build -- --watch & npm run preview",
     "lint": "eslint .",
     "preview": "vite preview",
     "clean": "rimraf dist node_modules/.vite"
