@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@repo/shared-store'
@@ -11,6 +11,7 @@ import Settings from './pages/Settings'
 
 const LoginApp = lazy(() => import('login/LoginApp'))
 const ProfileApp = lazy(() => import('profile/ProfileApp'))
+const ReportDetail = lazy(() => import('./pages/ReportDetail'))
 
 function App() {
   const user = useSelector((state: RootState) => state.auth.user)
@@ -71,15 +72,18 @@ function App() {
             }
           />
           <Route
-            path="/reports"
+            path="/reports/*"
             element={
               <ProtectedRoute>
                 <Layout>
-                  <Reports />
+                  <Outlet />
                 </Layout>
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Reports />} />
+            <Route path="detail/:id" element={<Suspense fallback={<div className="p-6">Loading detail...</div>}><ReportDetail /></Suspense>} />
+          </Route>
           <Route
             path="/settings"
             element={
