@@ -1,12 +1,38 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import federation from "@originjs/vite-plugin-federation";
 import tailwindcss from "@tailwindcss/vite";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+function selectedRemoteReload(): Plugin {
+  return {
+    name: "selected-remote-reload",
+    configureServer(server) {
+      const selectedRemote = process.env.VITE_DEV_MODULE;
+      if (selectedRemote !== "login" && selectedRemote !== "profile") return;
+
+      const remoteEntryPath = fileURLToPath(
+        new URL(`../${selectedRemote}/dist/assets/remoteEntry.js`, import.meta.url),
+      );
+      server.watcher.add(remoteEntryPath);
+      server.watcher.on("all", (event, changedPath) => {
+        if (
+          (event === "change" || event === "add") &&
+          resolve(changedPath) === remoteEntryPath
+        ) {
+          server.ws.send({ type: "full-reload" });
+        }
+      });
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    selectedRemoteReload(),
     federation({
       name: "main",
       remotes: {
@@ -26,6 +52,7 @@ export default defineConfig({
   ],
   server: {
     port: 5000,
+    strictPort: true,
   },
   build: {
     modulePreload: false,

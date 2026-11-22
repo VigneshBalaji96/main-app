@@ -14,6 +14,12 @@ const ProfileApp = lazy(() => import('profile/ProfileApp'))
 
 function App() {
   const user = useSelector((state: RootState) => state.auth.user)
+  const selectedDevModule = import.meta.env.VITE_DEV_MODULE
+  const selectedDevRoute = selectedDevModule === 'profile'
+    ? '/profile'
+    : selectedDevModule === 'login'
+      ? '/login'
+      : null
 
   return (
     <Router>
@@ -32,13 +38,13 @@ function App() {
           {/* Protected Routes with Layout */}
           <Route
             path="/"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
+            element={selectedDevRoute
+              ? <Navigate to={selectedDevRoute} replace />
+              : <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>}
           />
           <Route
             path="/dashboard"
@@ -52,13 +58,15 @@ function App() {
           />
           <Route
             path="/profile"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <ProfileApp />
-                </Layout>
-              </ProtectedRoute>
-            }
+            element={selectedDevModule === 'profile'
+              ? <Layout><ProfileApp /></Layout>
+              : selectedDevModule === 'login'
+                ? <Navigate to="/login" replace />
+                : <ProtectedRoute>
+                    <Layout>
+                      <ProfileApp />
+                    </Layout>
+                  </ProtectedRoute>}
           />
           <Route
             path="/analytics"
@@ -92,7 +100,7 @@ function App() {
           />
 
           {/* Fallback Route */}
-          <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />
+          <Route path="*" element={<Navigate to={selectedDevRoute ?? (user ? '/dashboard' : '/login')} replace />} />
         </Routes>
       </Suspense>
     </Router>
